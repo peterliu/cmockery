@@ -49,7 +49,7 @@
 
 // Perform an unsigned cast to LargestIntegralType.
 #define cast_to_largest_integral_type(value) \
-    ((LargestIntegralType)((unsigned)(value)))
+    ((LargestIntegralType)(value))
 
 // Retrieves a return value for the current function.
 #define mock() _mock(__func__, __FILE__, __LINE__)
@@ -176,7 +176,7 @@
 #define assert_true(c) _assert_true(cast_to_largest_integral_type(c), #c, \
                                     __FILE__, __LINE__)
 // Assert that the given expression is false.
-#define assert_false(c) _assert_true(!(cast_to_largest_integral_type(c)), #c, \
+#define assert_false(c) _assert_false((cast_to_largest_integral_type(c)), #c, \
                                      __FILE__, __LINE__)
 
 // Assert that the two given integers are equal, otherwise fail.
@@ -233,11 +233,18 @@
 // Forces the test to fail immediately and quit.
 #define fail() _fail(__FILE__, __LINE__)
 
+// Writes an error message and forces the test to fail immediately and quit
+#define fail_msg(msg, ...) do { \
+    print_error("ERROR: " msg "\n", ##__VA_ARGS__); \
+    fail(); \
+} while (0)
+
 // Generic method to kick off testing
 #define run_test(f) _run_test(#f, f, NULL, UNIT_TEST_FUNCTION_TYPE_TEST, NULL)
 
 // Initializes a UnitTest structure.
 #define unit_test(f) { #f, f, UNIT_TEST_FUNCTION_TYPE_TEST }
+#define unit_test_with_prefix(prefix, f) { #prefix#f, f, UNIT_TEST_FUNCTION_TYPE_TEST }
 #define unit_test_setup(test, setup) \
     { #test "_" #setup, setup, UNIT_TEST_FUNCTION_TYPE_SETUP }
 #define unit_test_teardown(test, teardown) \
@@ -262,6 +269,7 @@
  *     const UnitTest tests[] = {
  *         unit_test(Test0);
  *         unit_test(Test1);
+ *         unit_test_with_prefix(SecondRun_, Test1);
  *     };
  *     return run_tests(tests);
  * }
@@ -432,6 +440,9 @@ void _will_return(const char * const function_name, const char * const file,
                   const int line, const LargestIntegralType value,
                   const int count);
 void _assert_true(const LargestIntegralType result,
+                  const char* const expression,
+                  const char * const file, const int line);
+void _assert_false(const LargestIntegralType result,
                   const char* const expression,
                   const char * const file, const int line);
 void _assert_int_equal(
